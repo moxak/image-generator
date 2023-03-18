@@ -1,3 +1,3 @@
 # image-generator
 
-<img src="images/output.png" widht=300>
+<img src="images/gradient.png" widht=300>
