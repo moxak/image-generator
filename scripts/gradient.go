@@ -17,6 +17,12 @@ func drawGradient(width, height int, angle float64, colors ...color.RGBA) *image
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	draw.Draw(img, img.Bounds(), &image.Uniform{colors[0]}, image.ZP, draw.Src)
 
+    var isFlipped bool
+    if int(angle) / 90 % 2 != 0 {
+        isFlipped = true
+        angle = angle - 90
+    }
+
     // Calculate the direction of the gradient
 	dx := float64(width) * math.Sin(angle*math.Pi/180)
 	dy := float64(height) * math.Cos(angle*math.Pi/180)
@@ -42,7 +48,29 @@ func drawGradient(width, height int, angle float64, colors ...color.RGBA) *image
 			img.Set(i, j, color.RGBA{r, g, b, a})
 		}
 	}
+
+    if isFlipped {
+        img = flipHorizontal(img)
+    }
+
 	return img
+}
+
+func flipHorizontal(img *image.RGBA) *image.RGBA {
+    // Copy the original image
+    flipped := image.NewRGBA(img.Bounds())
+    draw.Draw(flipped, flipped.Bounds(), img, image.Point{}, draw.Src)
+
+    // Flip each row of pixels horizontally
+    for y := 0; y < img.Bounds().Dy(); y++ {
+        for x1, x2 := 0, img.Bounds().Dx()-1; x1 < x2; x1, x2 = x1+1, x2-1 {
+            // Swap the pixels on either side of the row's midpoint
+            flipped.Set(x1, y, img.At(x2, y))
+            flipped.Set(x2, y, img.At(x1, y))
+        }
+    }
+
+    return flipped
 }
 
 
