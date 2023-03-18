@@ -73,6 +73,18 @@ func flipHorizontal(img *image.RGBA) *image.RGBA {
     return flipped
 }
 
+// Convert hex color code to RGBA color
+func hexToRGBA(hexCode string) (color.RGBA, error) {
+	if len(hexCode) != 6 {
+		return color.RGBA{}, fmt.Errorf("Invalid color code length: %s", hexCode)
+	}
+	var r, g, b uint8
+	_, err := fmt.Sscanf(hexCode, "%02x%02x%02x", &r, &g, &b)
+	if err != nil {
+		return color.RGBA{}, err
+	}
+	return color.RGBA{r, g, b, 255}, nil
+}
 
 func main() {
     // Parse arguments
@@ -80,10 +92,25 @@ func main() {
 	height := flag.Int("h", 256, "Height of the image")
     angle := flag.Float64("angle", 0.0, "Angle of rotation in degrees")
     output := flag.String("o", "output.jpg", "Output file name")
-    flag.Parse()
+	flag.Parse()
 
-    // Draw gradient
-    img := drawGradient(*width, *height, *angle, color.RGBA{254,190,90, 255}, color.RGBA{222,50,76, 255}, color.RGBA{193, 52,104, 255}, color.RGBA{140,67,174,255})
+	colorArgs := flag.Args()
+	if len(colorArgs) == 0 {
+		log.Fatal("At least one color code must be provided")
+	}
+
+	// Convert color codes to RGBA colors
+	var colors []color.RGBA
+	for _, code := range colorArgs {
+		c, err := hexToRGBA(code)
+		if err != nil {
+			log.Fatalf("Invalid color code: %s", code)
+		}
+		colors = append(colors, c)
+	}
+
+	// Draw gradient
+	img := drawGradient(*width, *height, *angle, colors...)
 
     // Save image to file
 	file, err := os.Create(*output)
